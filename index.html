@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TRIP CONCIERGE（トリコン）</title>
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="トリコン">
+
+<!-- 1ファイル完結型 PWA マニフェスト＆アイコン自動生成スクリプト -->
+<script>
+  (function() {
+    const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#2563eb"/>
+          <stop offset="50%" stop-color="#06b6d4"/>
+          <stop offset="100%" stop-color="#10b981"/>
+        </linearGradient>
+      </defs>
+      <rect width="512" height="512" rx="112" fill="#0f172a"/>
+      <circle cx="256" cy="256" r="190" fill="url(#g)" opacity="0.22"/>
+      <text x="256" y="290" font-size="210" text-anchor="middle" fill="#ffffff">🧭</text>
+      <text x="256" y="425" font-family="sans-serif" font-weight="900" font-size="68" text-anchor="middle" fill="#38bdf8">トリコン</text>
+    </svg>`;
+    const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+
+    const appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.href = iconUrl;
+    document.head.appendChild(appleIcon);
+
+    const manifest = {
+      name: "TRIP CONCIERGE（トリコン）",
+      short_name: "トリコン",
+      description: "専属ツアーガイド＆時間防衛ドライブナビ",
+      start_url: location.href,
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#0f172a",
+      theme_color: "#0f172a",
+      icons: [
+        { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+        { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+      ]
+    };
+
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = URL.createObjectURL(blob);
+    document.head.appendChild(manifestLink);
+  })();
+</script>
+
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text-main: #0f172a;
+    --text-sub: #475569;
+    --border: #e2e8f0;
+    --neon-grad: linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #10b981 100%);
+    --mystery-grad: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+    --danger: #ef4444;
+    --safe: #10b981;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-main);
+    padding-bottom: 195px;
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 14px;
+  }
+
+  /* ヘッダー */
+  .app-header {
+    background: #0f172a;
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    background: linear-gradient(90deg, #38bdf8, #34d399, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-sub {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .voice-toggle-btn {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1.5px solid #34d399;
+    color: #6ee7b7;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 6px 11px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .voice-toggle-btn.muted {
+    background: rgba(148, 163, 184, 0.15);
+    border-color: #64748b;
+    color: #94a3b8;
+  }
+
+  /* デッドライン監視ステータスバー */
+  .deadline-bar {
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .time-info {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+  .eta-box { text-align: right; }
+  .eta-label { font-size: 10px; color: #94a3b8; display: block; }
+  .eta-value { font-size: 18px; font-weight: 900; color: #34d399; }
+  .eta-value.over { color: #f87171; animation: pulse 1s infinite; }
+
+  /* モード切替タブ */
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    background: #e2e8f0;
+    padding: 5px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+  .mode-tab {
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    padding: 11px 6px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .mode-tab.active-plan {
+    background: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+  .mode-tab.active-mystery {
+    background: #ffffff;
+    color: #7c3aed;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  /* 共通：ガイドテーマ選択セクション */
+  .theme-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .section-title { font-size: 14px; font-weight: 900; color: var(--text-main); }
+  .section-hint { font-size: 11px; color: var(--text-sub); font-weight: 700; }
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .theme-chip {
+    background: #f1f5f9;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 9px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.15s;
+    user-select: none;
+  }
+  .theme-chip.active {
+    background: #eff6ff;
+    border-color: #2563eb;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.15);
+  }
+  .theme-chip .icon { font-size: 20px; display: block; margin-bottom: 2px; }
+  .theme-chip .label { font-size: 11px; font-weight: 800; color: var(--text-main); display: block; }
+
+  .custom-wish-area {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+  }
+  .custom-wish-area.show { display: block; }
+  .wish-input {
+    width: 100%;
+    border: 1.5px solid #93c5fd;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 13px;
+    font-weight: 700;
+    outline: none;
+  }
+  .guide-brief {
+    margin-top: 9px;
+    background: #f0f9ff;
+    border-left: 4px solid #0284c7;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0369a1;
+    line-height: 1.4;
+  }
+
+  /* 行き当たりばったり＆目的地1つモード専用UI */
+  .mystery-view { display: none; }
+  .mystery-view.show { display: block; }
+  .plan-view { display: none; }
+  .plan-view.show { display: block; }
+
+  .single-goal-card {
+    background: var(--card);
+    border: 2px solid #c4b5fd;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.06);
+  }
+  .goal-input-row { display: flex; gap: 8px; margin-top: 8px; }
+  .goal-input {
+    flex: 1;
+    border: 1.5px solid #a78bfa;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 14px;
+    font-weight: 800;
+    outline: none;
+    background: #faf5ff;
+  }
+  .goal-clear-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #475569;
+    cursor: pointer;
+  }
+  .preset-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+  .preset-pill {
+    background: #f3e8ff;
+    border: 1px solid #d8b4fe;
+    color: #5b21b6;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 9px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .leg-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #ddd6fe;
+  }
+  .leg-btn {
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 9px 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #475569;
+    cursor: pointer;
+    text-align: center;
+  }
+  .leg-btn.active { background: #ede9fe; border-color: #7c3aed; color: #5b21b6; }
+
+  .mystery-start-btn {
+    width: 100%;
+    background: var(--mystery-grad);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+    margin-bottom: 14px;
+  }
+
+  .mystery-log {
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+  }
+  .log-item {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+  }
+  .log-item:last-child { border-bottom: none; }
+
+  /* 計画派：タイムラインカード */
+  .timeline-list { display: flex; flex-direction: column; gap: 10px; }
+  .spot-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 13px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+  }
+  .spot-card.added-spot { border-color: #f59e0b; background: #fffbeb; }
+  .spot-card.endpoint { background: #f1f5f9; border-style: dashed; }
+  .spot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .spot-time { font-size: 16px; font-weight: 900; color: #2563eb; white-space: nowrap; }
+  .spot-name { font-size: 17px; font-weight: 900; color: var(--text-main); flex: 1; }
+  .spot-badge { font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 6px; background: #e2e8f0; color: #334155; }
+  .spot-guide-note { margin-top: 6px; font-size: 12px; color: var(--text-sub); background: #f8fafc; padding: 6px 9px; border-radius: 8px; line-height: 1.4; }
+  .spot-controls { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .stay-pill { display: inline-flex; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 3px 8px; gap: 8px; }
+  .stay-btn { background: #2563eb; color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 15px; font-weight: 900; cursor: pointer; }
+  .stay-text { font-size: 13px; font-weight: 800; color: #1e40af; }
+  .move-btns { display: flex; gap: 5px; }
+  .mini-btn { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 9px; font-size: 12px; font-weight: 800; cursor: pointer; }
+  .drive-leg { text-align: center; font-size: 12px; font-weight: 800; color: #64748b; padding: 2px 0; }
+
+  /* 3択自動補正アラートパネル */
+  .correction-panel {
+    display: none;
+    background: #fef2f2;
+    border: 2px solid #ef4444;
+    border-radius: 16px;
+    padding: 13px;
+    margin-bottom: 14px;
+    animation: slideDown 0.25s ease;
+  }
+  .correction-panel.show { display: block; }
+  .corr-title { font-size: 14px; font-weight: 900; color: #b91c1c; margin-bottom: 6px; }
+  .corr-desc { font-size: 12px; font-weight: 700; color: #7f1d1d; margin-bottom: 10px; line-height: 1.4; }
+  .corr-choices { display: grid; grid-template-columns: 1fr; gap: 7px; }
+  .choice-btn {
+    background: #fff;
+    border: 1.5px solid #fca5a5;
+    border-radius: 10px;
+    padding: 9px 11px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 800;
+    color: #0f172a;
+    cursor: pointer;
+  }
+
+  /* =====================================================================
+     ★ 実車版ユニバーサルUI：画面下部 1/3 巨大2択ボトムシート ★
+     ===================================================================== */
+  .decision-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 190;
+  }
+  .decision-backdrop.show { display: block; }
+
+  .bottom-third-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 36vh;
+    min-height: 245px;
+    max-height: 340px;
+    background: #ffffff;
+    border-top: 4px solid #2563eb;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -10px 35px rgba(15, 23, 42, 0.35);
+    z-index: 200;
+    padding: 14px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transform: translateY(105%);
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bottom-third-sheet.open { transform: translateY(0); }
+  .sheet-inner {
+    max-width: 600px;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .sheet-spot-name {
+    font-size: 18px;
+    font-weight: 900;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sheet-replay-btn {
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 5px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sheet-eta-hint {
+    font-size: 13px;
+    font-weight: 800;
+    color: #059669;
+    margin: 4px 0 8px;
+  }
+  .sheet-eta-hint.warn { color: #dc2626; }
+  .mega-two-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+  }
+  .mega-btn-go {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+    padding: 8px;
+  }
+  .mega-btn-go:active { transform: scale(0.97); }
+
+  .mega-btn-no {
+    background: #f1f5f9;
+    color: #1e293b;
+    border: 3px solid #cbd5e1;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+  }
+  .mega-btn-no:active { transform: scale(0.97); background: #e2e8f0; }
+
+  .mega-icon { font-size: 32px; line-height: 1.1; margin-bottom: 4px; }
+  .mega-label { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; }
+  .mega-sub { font-size: 12px; font-weight: 800; opacity: 0.9; margin-top: 2px; }
+
+  /* 下部固定：通常時の常駐Geminiコンシェルジュ */
+  .bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    padding: 10px 14px 14px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    z-index: 100;
+  }
+  .dock-inner { max-width: 600px; margin: 0 auto; }
+  .concierge-msg {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e0f2fe;
+    background: rgba(2, 132, 199, 0.25);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .quick-sim-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-bottom: 8px;
+    padding-bottom: 2px;
+  }
+  .sim-chip {
+    background: #1e293b;
+    border: 1px solid #475569;
+    color: #f8fafc;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .sim-chip.accent { background: #0284c7; border-color: #38bdf8; }
+  .chat-bar { display: flex; gap: 6px; }
+  .chat-input {
+    flex: 1;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 12px;
+    padding: 10px 11px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    min-width: 0;
+  }
+  .send-btn {
+    background: #334155;
+    border: 1px solid #64748b;
+    border-radius: 12px;
+    padding: 0 12px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mega-mic-btn {
+    background: var(--neon-grad);
+    border: none;
+    border-radius: 12px;
+    padding: 0 14px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mega-mic-btn.listening {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    animation: pulse 0.9s infinite;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ヘッダー＆デッドライン監視 -->
+  <div class="app-header">
+    <div class="header-top">
+      <div>
+        <div class="brand-title">TRIP CONCIERGE</div>
+        <div class="brand-sub">トリコン｜1ファイル完結PWA・音声＆巨大2択ナビ</div>
+      </div>
+      <button class="voice-toggle-btn" id="voiceToggleBtn" onclick="toggleVoice()">🔊 音声ガイド ON</button>
+    </div>
+    <div class="deadline-bar">
+      <div class="time-info">
+        🚗 11:00 名張出発<br>
+        🔒 絶対帰宅 <strong id="deadlineDisplay">18:20</strong>
+      </div>
+      <div class="eta-box">
+        <span class="eta-label" id="etaLabel">現在の名張到着予定</span>
+        <span class="eta-value" id="etaDisplay">18:10</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ワンタップ切り替えタブ -->
+  <div class="mode-tabs">
+    <button class="mode-tab active-plan" id="tabPlan" onclick="switchMode('plan')">📋 きっちり計画派</button>
+    <button class="mode-tab" id="tabMystery" onclick="switchMode('mystery')">🎲 目的地1つ・行き当たりばったり</button>
+  </div>
+
+  <!-- 共通：3秒で選べるガイドテーマ選択 -->
+  <div class="theme-section">
+    <div class="section-head">
+      <span class="section-title">🎙️ 今日のツアーガイドテーマ（複数選択）</span>
+      <span class="section-hint">3秒設定・台本自動切替</span>
+    </div>
+    <div class="theme-grid">
+      <div class="theme-chip active" data-theme="スイーツ" onclick="toggleTheme(this)">
+        <span class="icon">🍰</span>
+        <span class="label">有名スイーツ</span>
+      </div>
+      <div class="theme-chip" data-theme="ご当地グルメ" onclick="toggleTheme(this)">
+        <span class="icon">🍜</span>
+        <span class="label">ご当地グルメ</span>
+      </div>
+      <div class="theme-chip" data-theme="道の駅" onclick="toggleTheme(this)">
+        <span class="icon">🛖</span>
+        <span class="label">道の駅・名産</span>
+      </div>
+      <div class="theme-chip" data-theme="歴史" onclick="toggleTheme(this)">
+        <span class="icon">🏯</span>
+        <span class="label">歴史・名跡</span>
+      </div>
+      <div class="theme-chip" data-theme="温泉" onclick="toggleTheme(this)">
+        <span class="icon">♨️</span>
+        <span class="label">日帰り温泉</span>
+      </div>
+      <div class="theme-chip" id="customThemeChip" data-theme="その他" onclick="toggleCustomTheme(this)">
+        <span class="icon">✨</span>
+        <span class="label">わがまま欄</span>
+      </div>
+    </div>
+
+    <div class="custom-wish-area" id="customWishArea">
+      <input type="text" class="wish-input" id="wishInput" placeholder="例：パクチー料理、絶景撮影、地元スーパー" oninput="updateGuideBrief()">
+    </div>
+
+    <div class="guide-brief" id="guideBrief">
+      🍰 <strong>スイーツハンターモード稼働中：</strong>通り道にある絶品スイーツやカフェを18:20帰宅を守れる範囲で誘惑提案します！
+    </div>
+  </div>
+
+  <!-- ================= 1. 計画派モードビュー ================= -->
+  <div class="plan-view show" id="planView">
+    <div class="correction-panel" id="correctionPanel">
+      <div class="corr-title">⚠️ 帰宅デッドライン（<span id="warnDeadline">18:20</span>）を <span id="overMinutes">20</span>分 超過します！</div>
+      <div class="corr-desc">専属添乗員からの自動リカバリー提案です。音声またはタップで選んでください：</div>
+      <div class="corr-choices">
+        <button class="choice-btn" onclick="applyFix('shorten')">
+          ① <strong>滞在時間を短縮して予定死守</strong>（後半スポットを自動調整し18:20帰宅）
+        </button>
+        <button class="choice-btn" onclick="applyFix('skip')">
+          ② <strong>直近の寄り道／最終スポットをスキップ</strong>（ゆとりを持って18:20前帰宅）
+        </button>
+        <button class="choice-btn" onclick="applyFix('extend')">
+          ③ <strong>デッドライン延長（残業モード）</strong>（全スポット満喫し帰宅予定時刻へ変更）
+        </button>
+      </div>
+    </div>
+
+    <div class="timeline-list" id="timelineList"></div>
+  </div>
+
+  <!-- ================= 2. 目的地1つ・行き当たりばったりモードビュー ================= -->
+  <div class="mystery-view" id="mysteryView">
+    <div class="single-goal-card">
+      <div class="section-head" style="margin-bottom:2px;">
+        <span class="section-title">🎯 メイン目的地（1つだけ・空欄なら完全ノープラン）</span>
+      </div>
+      <div style="font-size:11px; color:#64748b; font-weight:700;">
+        ボタンを押すと音声ガイドが流れ、同時に<strong>画面下部1/3の巨大2択ボタン</strong>がせり上がります！
+      </div>
+      <div class="goal-input-row">
+        <input type="text" class="goal-input" id="singleGoalInput" value="マキノのメタセコイア並木" placeholder="例：メタセコイア並木（空欄でもOK）" oninput="onSingleGoalChange()">
+        <button class="goal-clear-btn" onclick="clearSingleGoal()">クリア</button>
+      </div>
+      <div class="preset-pills">
+        <button class="preset-pill" onclick="setPresetGoal('マキノのメタセコイア並木')">🌲 メタセコイア並木</button>
+        <button class="preset-pill" onclick="setPresetGoal('白鬚神社・湖中大鳥居')">⛩️ 白鬚神社</button>
+        <button class="preset-pill" onclick="setPresetGoal('黒壁スクエア（長浜）')">🏮 黒壁スクエア</button>
+        <button class="preset-pill" onclick="clearSingleGoal()">🎲 目的地ゼロ</button>
+      </div>
+
+      <div class="leg-switch">
+        <button class="leg-btn active" id="legOutbound" onclick="switchLeg('outbound')">🚗 行き（往路）の道中</button>
+        <button class="leg-btn" id="legInbound" onclick="switchLeg('inbound')">🏠 帰り（復路）の道中</button>
+      </div>
+    </div>
+
+    <button class="mystery-start-btn" onclick="triggerMysteryProposal()">🎲 音声提案＆下部1/3巨大2択ボタンを起動</button>
+
+    <div class="mystery-log">
+      <div class="section-title" style="margin-bottom:6px;">📍 今日の気まま足あとログ</div>
+      <div id="mysteryLogList">
+        <div class="log-item">🚗 11:00 名張市を出発 ➔ メイン目的地「マキノのメタセコイア並木」（18:20帰宅厳守）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     ★ 実車版ユニバーサルUI：画面下部 1/3 特大2択ボトムシート ★
+     ===================================================================== -->
+<div class="decision-backdrop" id="decisionBackdrop" onclick="decideNo()"></div>
+<div class="bottom-third-sheet" id="bottomThirdSheet">
+  <div class="sheet-inner">
+    <div>
+      <div class="sheet-header">
+        <div class="sheet-spot-name" id="sheetSpotName">🍰 ラ コリーナ近江八幡</div>
+        <button class="sheet-replay-btn" onclick="replayCurrentOfferVoice()">🔊 もう一回聞く</button>
+      </div>
+      <div class="sheet-eta-hint" id="sheetEtaHint">✅ 寄っても名張帰宅【17:50】（18:20まで余裕30分）</div>
+    </div>
+
+    <div class="mega-two-choices">
+      <button class="mega-btn-go" onclick="decideYes()">
+        <span class="mega-icon">👍</span>
+        <span class="mega-label">行く！</span>
+        <span class="mega-sub">ルートに追加する</span>
+      </button>
+      <button class="mega-btn-no" onclick="decideNo()">
+        <span class="mega-icon">⏭️</span>
+        <span class="mega-label">行かない</span>
+        <span class="mega-sub">スルーして進む</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 下部固定：通常時の常駐Geminiコンシェルジュ -->
+<div class="bottom-dock">
+  <div class="dock-inner">
+    <div class="concierge-msg" id="conciergeMsg">
+      🎙️ Chrome右上メニュー「ホーム画面に追加」で、この1ファイルのまま全画面アプリとして起動できます！
+    </div>
+    <div class="quick-sim-row" id="planQuickRow">
+      <button class="sim-chip accent" onclick="simulateHungry()">🍰 「小腹すいた！」巨大2択テスト</button>
+      <button class="sim-chip" onclick="simulateDelay()">⏰ ラーメン30分並び発生</button>
+      <button class="sim-chip" onclick="resetPlan()">🔄 初期プランに戻す</button>
+    </div>
+    <div class="chat-bar">
+      <input type="text" class="chat-input" id="chatInput" placeholder="例：行く / 行かない / 温泉に寄りたい" onkeypress="if(event.key==='Enter') handleChat()">
+      <button class="send-btn" onclick="handleChat()">送信</button>
+      <button class="mega-mic-btn" id="micBtn" onclick="startVoiceRecognition()">🎙️ 声で返事</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const START_MIN = 11 * 60;
+  let deadlineMin = 18 * 60 + 20;
+  let activeThemes = new Set(['スイーツ']);
+  let currentMode = 'plan';
+  let currentLeg = 'outbound';
+  let voiceEnabled = true;
+  let currentOfferSpeech = '';
+  let pendingProposal = null;
+
+  // Web Speech API 読み上げ
+  function speakGuide(text) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const cleanText = text
+      .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+      .replace(/[【】「」🎙️✅⚠️👍⏭️🚗🏠🍰🍜🛖🏯♨️✨🎲📋]/g, '')
+      .replace(/(\d{1,2}):(\d{2})/g, '$1時$2分');
+
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    utter.lang = 'ja-JP';
+    utter.rate = 1.05;
+    utter.pitch = 1.05;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function toggleVoice() {
+    voiceEnabled = !voiceEnabled;
+    const btn = document.getElementById('voiceToggleBtn');
+    if (voiceEnabled) {
+      btn.classList.remove('muted');
+      btn.innerText = '🔊 音声ガイド ON';
+      speakGuide('音声ガイドをオンにしました。');
+    } else {
+      btn.classList.add('muted');
+      btn.innerText = '🔇 音声ガイド OFF';
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+  }
+
+  // 下部1/3巨大2択シートの開閉制御
+  function openDecisionSheet(proposal) {
+    pendingProposal = proposal;
+    document.getElementById('sheetSpotName').innerText = proposal.title;
+    const hintEl = document.getElementById('sheetEtaHint');
+    hintEl.innerText = proposal.etaHint;
+    if (proposal.isWarn) hintEl.classList.add('warn');
+    else hintEl.classList.remove('warn');
+
+    document.getElementById('decisionBackdrop').classList.add('show');
+    document.getElementById('bottomThirdSheet').classList.add('open');
+
+    currentOfferSpeech = proposal.script;
+    speakGuide(proposal.script);
+  }
+
+  function closeDecisionSheet() {
+    document.getElementById('decisionBackdrop').classList.remove('show');
+    document.getElementById('bottomThirdSheet').classList.remove('open');
+    pendingProposal = null;
+  }
+
+  function replayCurrentOfferVoice() {
+    if (currentOfferSpeech) speakGuide(currentOfferSpeech);
+  }
+
+  // 巨大ボタン「行く！」確定処理
+  function decideYes() {
+    if (!pendingProposal) return;
+    const prop = pendingProposal;
+    closeDecisionSheet();
+
+    if (prop.context === 'mystery') {
+      mysterySlackMin = Math.max(0, mysterySlackMin - prop.stay);
+      const logList = document.getElementById('mysteryLogList');
+      const phaseLabel = currentLeg === 'outbound' ? '往路寄り道' : '復路寄り道';
+      logList.innerHTML += `<div class="log-item">👍 【${phaseLabel}】「${prop.title}」へ立ち寄り決定！</div>`;
+      const reply = `了解です！「${prop.title}」をルートに追加しました。残りの自由余裕はあと${mysterySlackMin}分です。`;
+      document.getElementById('conciergeMsg').innerText = `👍 ${reply}`;
+      speakGuide(reply);
+      updateMysteryHeader();
+    } else {
+      const insertIdx = Math.min(2, spots.length);
+      spots.splice(insertIdx, 0, {
+        id: 'detour_' + Date.now(),
+        name: prop.title,
+        driveBefore: 15,
+        stay: prop.stay,
+        badge: '誘惑寄り道',
+        guide: `🎙️ ツアーガイド追加：${prop.title}（滞在${prop.stay}分）をスケジュールに組み込みました！`,
+        added: true
+      });
+      const reply = `「${prop.title}」をタイムラインに追加しました！帰宅時間を再計算します。`;
+      document.getElementById('conciergeMsg').innerText = `👍 ${reply}`;
+      speakGuide(reply);
+      renderTimeline();
+    }
+  }
+
+  // 巨大ボタン「行かない」確定処理
+  function decideNo() {
+    if (!pendingProposal) return;
+    const prop = pendingProposal;
+    closeDecisionSheet();
+    const reply = `了解しました、「${prop.title}」はスルーしてそのまま進みますね！`;
+    document.getElementById('conciergeMsg').innerText = `⏭️ ${reply}`;
+    speakGuide(reply);
+  }
+
+  // Web Speech API 音声認識
+  function startVoiceRecognition() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert('このブラウザでは音声認識が利用できないため、左の入力欄からテストしてください。');
+      document.getElementById('chatInput').focus();
+      return;
+    }
+    const rec = new SpeechRec();
+    rec.lang = 'ja-JP';
+    rec.interimResults = false;
+    const micBtn = document.getElementById('micBtn');
+
+    rec.onstart = () => {
+      micBtn.classList.add('listening');
+      micBtn.innerText = '🔴 聴き取り中...';
+    };
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('chatInput').value = transcript;
+      handleChat();
+    };
+    rec.onerror = () => {
+      document.getElementById('conciergeMsg').innerText = '🎙️ 音声が聞き取れませんでした。もう一度お試しください。';
+    };
+    rec.onend = () => {
+      micBtn.classList.remove('listening');
+      micBtn.innerText = '🎙️ 声で返事';
+    };
+    rec.start();
+  }
+
+  // 計画派データ
+  const initialSpots = [
+    {
+      id: 'ramen',
+      name: 'RAMEN 其先（滋賀）',
+      driveBefore: 95,
+      stay: 45,
+      badge: 'ランチ・麺',
+      guide: '🎙️ ガイド豆知識：滋賀の人気ラーメン店！ピーク時は行列ができるので到着後の待ち時間に注意です。',
+      added: false
+    },
+    {
+      id: 'azuchi',
+      name: '安土城跡',
+      driveBefore: 35,
+      stay: 75,
+      badge: '歴史・名跡',
+      guide: '🎙️ ガイド案内：織田信長が築いた幻の天主跡。石段が続くので残り時間に合わせて本丸まで案内します！',
+      added: false
+    },
+    {
+      id: 'costco',
+      name: 'コストコ東近江倉庫店',
+      driveBefore: 25,
+      stay: 60,
+      badge: 'お買い物',
+      guide: '🎙️ 添乗員メモ：ここを出る時間が18:20帰宅の最終防衛ラインです。カート混雑に気をつけましょう！',
+      added: false
+    }
+  ];
+  const finalDriveMin = 95;
+  let spots = JSON.parse(JSON.stringify(initialSpots));
+
+  const outboundPool = [
+    {
+      theme: 'スイーツ',
+      title: '🍰 ラ コリーナ近江八幡（焼きたてバーム）',
+      script: 'ドライバーさん、あと10分走った左手に、焼きたてバームクーヘンの有名店があります！25分だけ甘い休憩を挟んでも、18時20分の帰宅には間に合いますよ。行きますか？行きませんか？',
+      stay: 25
+    },
+    {
+      theme: 'ご当地グルメ',
+      title: '🍜 近江ちゃんぽん総本家（湖西ルート）',
+      script: '速報です！この先8分のところにある人気ちゃんぽん店、今なら待ち時間ゼロで入れそうです！40分寄っても目的地には余裕で着きますが、行きますか？行きませんか？',
+      stay: 40
+    },
+    {
+      theme: '道の駅',
+      title: '🛖 道の駅 しんあさひ風車村・直売所',
+      script: '右手に見えます道の駅、ここの濃厚牧場ソフトと鯖寿司は絶品です！20分だけリフレッシュ休憩に行きますか？スルーしますか？',
+      stay: 20
+    },
+    {
+      theme: '歴史',
+      title: '🏯 安土城跡・天主跡ダイジェスト散策',
+      script: '左手をご覧ください！織田信長が築いたお城の山が見えてきました。往復35分のダイジェストコースなら今の時間でも登れます。行きますか？進みますか？',
+      stay: 35
+    }
+  ];
+
+  const inboundPool = [
+    {
+      theme: '温泉',
+      title: '♨️ 琵琶湖ビュー天然温泉（帰り道沿い）',
+      script: '帰り道沿いに、琵琶湖を眺めながら入れる天然温泉があるんです。今なら40分ゆっくり湯船に浸かっても、18時20分には自宅へ送り届けられますよ！ひとっ風呂行きますか？直帰しますか？',
+      stay: 40
+    },
+    {
+      theme: 'スイーツ',
+      title: '🍰 湖西の老舗和菓子・メタセコイア並木プリン',
+      script: '運転お疲れ様です！この先5分に、地元民が買い占める絶品和菓子屋さんがあります。15分だけ立ち寄りますか？真っ直ぐ帰りますか？',
+      stay: 15
+    },
+    {
+      theme: '道の駅',
+      title: '🛖 道の駅 妹子の郷（お土産・地元グルメ）',
+      script: '左手に見えますのは、限定お土産がぎっしり詰まった道の駅です！帰り道ではここが最後の好立地。20分だけ偵察に行きますか？通り過ぎますか？',
+      stay: 20
+    }
+  ];
+
+  let mysteryIdx = 0;
+  let mysterySlackMin = 55;
+
+  function formatTime(totalMin) {
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  function switchMode(mode) {
+    currentMode = mode;
+    const tabPlan = document.getElementById('tabPlan');
+    const tabMystery = document.getElementById('tabMystery');
+    const planView = document.getElementById('planView');
+    const mysteryView = document.getElementById('mysteryView');
+    const quickRow = document.getElementById('planQuickRow');
+
+    if (mode === 'plan') {
+      tabPlan.className = 'mode-tab active-plan';
+      tabMystery.className = 'mode-tab';
+      planView.classList.add('show');
+      mysteryView.classList.remove('show');
+      quickRow.style.display = 'flex';
+      document.getElementById('etaLabel').innerText = '現在の名張到着予定';
+      const msg = '📋 きっちり計画派モードです。18:20帰宅デッドラインを分単位で防衛します！';
+      document.getElementById('conciergeMsg').innerText = msg;
+      renderTimeline();
+    } else {
+      tabPlan.className = 'mode-tab';
+      tabMystery.className = 'mode-tab active-mystery';
+      planView.classList.remove('show');
+      mysteryView.classList.add('show');
+      quickRow.style.display = 'none';
+      document.getElementById('etaLabel').innerText = '18:20帰宅までの自由余裕';
+      updateMysteryHeader();
+      onSingleGoalChange();
+      triggerMysteryProposal();
+    }
+  }
+
+  function updateMysteryHeader() {
+    const etaEl = document.getElementById('etaDisplay');
+    etaEl.classList.remove('over');
+    etaEl.innerText = mysterySlackMin > 0 ? `あと ${mysterySlackMin}分` : '直帰ライン！';
+  }
+
+  function setPresetGoal(goalName) {
+    document.getElementById('singleGoalInput').value = goalName;
+    onSingleGoalChange();
+    triggerMysteryProposal();
+  }
+
+  function clearSingleGoal() {
+    document.getElementById('singleGoalInput').value = '';
+    onSingleGoalChange();
+    triggerMysteryProposal();
+  }
+
+  function onSingleGoalChange() {
+    const goal = document.getElementById('singleGoalInput').value.trim();
+    const msgEl = document.getElementById('conciergeMsg');
+    if (goal) {
+      msgEl.innerText = `🎯 メイン目的地【${goal}】をロック！道中で音声と下部1/3巨大2択ボタンが起動します。`;
+    } else {
+      msgEl.innerText = `🎲 目的地ゼロの完全ノープランモード！進行方向に沿って18:20までに帰れる範囲で案内します。`;
+    }
+  }
+
+  function switchLeg(leg) {
+    currentLeg = leg;
+    document.getElementById('legOutbound').className = leg === 'outbound' ? 'leg-btn active' : 'leg-btn';
+    document.getElementById('legInbound').className = leg === 'inbound' ? 'leg-btn active' : 'leg-btn';
+    triggerMysteryProposal();
+  }
+
+  function triggerMysteryProposal() {
+    const goal = document.getElementById('singleGoalInput').value.trim();
+    const wish = document.getElementById('wishInput').value.trim();
+    const useCustom = document.getElementById('customThemeChip').classList.contains('active') && wish;
+
+    let offer;
+    if (useCustom && mysteryIdx % 2 === 1) {
+      offer = {
+        title: `✨ 「${wish}」の隠れ家スポット`,
+        script: `お待たせしました！リクエストいただいた「${wish}」が楽しめる穴場スポットを進行方向に発見しました！25分寄り道しても帰宅時間には影響ありません。行きますか？行きませんか？`,
+        stay: 25
+      };
+    } else {
+      const basePool = currentLeg === 'outbound' ? outboundPool : inboundPool;
+      const matched = basePool.filter(item => activeThemes.has(item.theme));
+      const pool = matched.length > 0 ? matched : basePool;
+      offer = pool[mysteryIdx % pool.length];
+    }
+    mysteryIdx++;
+
+    const remainAfter = mysterySlackMin - offer.stay;
+    const estReturn = formatTime(deadlineMin - remainAfter);
+    const prefix = goal ? `${goal}${currentLeg === 'outbound' ? 'へ向かう道中！' : 'からの帰り道！'}` : '';
+
+    openDecisionSheet({
+      context: 'mystery',
+      title: offer.title,
+      stay: offer.stay,
+      script: prefix + offer.script,
+      isWarn: remainAfter < 0,
+      etaHint: remainAfter >= 0
+        ? `✅ 滞在${offer.stay}分寄っても名張帰宅【${estReturn}】（18:20まで余裕${remainAfter}分）`
+        : `⚠️ 寄ると18:20を${Math.abs(remainAfter)}分超過します（延長覚悟ならOK）`
+    });
+  }
+
+  function simulateHungry() {
+    let title = '🍰 ラ コリーナ近江八幡（焼きたてバーム）';
+    let stay = 30;
+    let script = 'ドライバーさん、安土城跡からすぐの場所に焼きたてバームクーヘンの有名店があります！30分寄り道しますか？行きませんか？';
+
+    if (activeThemes.has('温泉')) {
+      title = '♨️ 帰り道の立ち寄り天然温泉';
+      stay = 45;
+      script = '帰り道沿いに天然温泉があります！45分ひとっ風呂浴びていきますか？行きませんか？';
+    }
+
+    openDecisionSheet({
+      context: 'plan',
+      title: title,
+      stay: stay,
+      script: script,
+      isWarn: true,
+      etaHint: `⚠️ 滞在${stay}分追加すると18:20を少し超過します（追加後に自動短縮調整も可）`
+    });
+  }
+
+  function toggleTheme(el) {
+    const theme = el.dataset.theme;
+    el.classList.toggle('active');
+    if (activeThemes.has(theme)) activeThemes.delete(theme);
+    else activeThemes.add(theme);
+    updateGuideBrief();
+  }
+
+  function toggleCustomTheme(el) {
+    el.classList.toggle('active');
+    const area = document.getElementById('customWishArea');
+    area.classList.toggle('show');
+    if (area.classList.contains('show')) document.getElementById('wishInput').focus();
+    updateGuideBrief();
+  }
+
+  function updateGuideBrief() {
+    const list = Array.from(activeThemes);
+    const wish = document.getElementById('wishInput').value.trim();
+    if (document.getElementById('customThemeChip').classList.contains('active') && wish) {
+      list.push(`こだわり「${wish}」`);
+    }
+    const briefEl = document.getElementById('guideBrief');
+    if (list.length === 0) {
+      briefEl.innerHTML = '🧭 <strong>標準添乗員モード：</strong>時間厳守を最優先し、主要スポットの案内を行います。';
+    } else {
+      briefEl.innerHTML = `🎧 <strong>ガイド方針【${list.join('・')}】：</strong>通り道にある該当スポットを18:20帰宅を守れる範囲で誘惑提案します！`;
+    }
+  }
+
+  function renderTimeline() {
+    if (currentMode !== 'plan') return;
+    const listEl = document.getElementById('timelineList');
+    listEl.innerHTML = '';
+    let currentMin = START_MIN;
+
+    listEl.innerHTML += `
+      <div class="spot-card endpoint">
+        <div class="spot-top">
+          <span class="spot-time">11:00</span>
+          <span class="spot-name">🏠 名張市 出発</span>
+          <span class="spot-badge">START</span>
+        </div>
+      </div>
+    `;
+
+    spots.forEach((spot, idx) => {
+      listEl.innerHTML += `<div class="drive-leg">⬇️ 下道移動 約${spot.driveBefore}分</div>`;
+      currentMin += spot.driveBefore;
+      const arrTime = formatTime(currentMin);
+      currentMin += spot.stay;
+      const depTime = formatTime(currentMin);
+
+      listEl.innerHTML += `
+        <div class="spot-card ${spot.added ? 'added-spot' : ''}">
+          <div class="spot-top">
+            <span class="spot-time">${arrTime}〜${depTime}</span>
+            <span class="spot-name">${spot.name}</span>
+            <span class="spot-badge">${spot.badge}</span>
+          </div>
+          <div class="spot-guide-note">${spot.guide}</div>
+          <div class="spot-controls">
+            <div class="stay-pill">
+              <button class="stay-btn" onclick="changeStay(${idx}, -15)">−</button>
+              <span class="stay-text">滞在 ${spot.stay}分</span>
+              <button class="stay-btn" onclick="changeStay(${idx}, 15)">＋</button>
+            </div>
+            <div class="move-btns">
+              <button class="mini-btn" onclick="moveSpot(${idx}, -1)">▲</button>
+              <button class="mini-btn" onclick="moveSpot(${idx}, 1)">▼</button>
+              <button class="mini-btn" onclick="removeSpot(${idx})">削除</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML += `<div class="drive-leg">⬇️ 帰路（下道） 約${finalDriveMin}分</div>`;
+    currentMin += finalDriveMin;
+    const etaStr = formatTime(currentMin);
+
+    listEl.innerHTML += `
+      <div class="spot-card endpoint">
+        <div class="spot-top">
+          <span class="spot-time">${etaStr}</span>
+          <span class="spot-name">🏁 名張市 帰宅予定</span>
+          <span class="spot-badge">GOAL</span>
+        </div>
+      </div>
+    `;
+
+    const etaEl = document.getElementById('etaDisplay');
+    const deadlineEl = document.getElementById('deadlineDisplay');
+    etaEl.innerText = etaStr;
+    deadlineEl.innerText = formatTime(deadlineMin);
+
+    const over = currentMin - deadlineMin;
+    const panel = document.getElementById('correctionPanel');
+    if (over > 0) {
+      etaEl.classList.add('over');
+      document.getElementById('warnDeadline').innerText = formatTime(deadlineMin);
+      document.getElementById('overMinutes').innerText = over;
+      panel.classList.add('show');
+    } else {
+      etaEl.classList.remove('over');
+      panel.classList.remove('show');
+    }
+  }
+
+  function changeStay(idx, delta) {
+    spots[idx].stay = Math.max(15, spots[idx].stay + delta);
+    renderTimeline();
+  }
+
+  function moveSpot(idx, dir) {
+    const target = idx + dir;
+    if (target < 0 || target >= spots.length) return;
+    [spots[idx], spots[target]] = [spots[target], spots[idx]];
+    renderTimeline();
+  }
+
+  function removeSpot(idx) {
+    spots.splice(idx, 1);
+    renderTimeline();
+  }
+
+  function simulateDelay() {
+    if (spots.length > 0) {
+      spots[0].stay += 30;
+      const msg = `「${spots[0].name}」の滞在が30分延びました！18時20分の名張帰宅を守るため、3つのリカバリー案から選んでください。`;
+      document.getElementById('conciergeMsg').innerText = `⚠️ ${msg}`;
+      speakGuide(msg);
+      renderTimeline();
+    }
+  }
+
+  function applyFix(mode) {
+    let msg = '';
+    if (mode === 'shorten') {
+      spots.forEach((s, i) => {
+        if (i > 0 && s.stay > 30) s.stay = Math.max(30, s.stay - 20);
+      });
+      msg = '後半スポットの滞在時間を短縮し、18時20分の名張帰宅を死守するスケジュールに再設定しました！';
+    } else if (mode === 'skip') {
+      const addedIdx = spots.findIndex(s => s.added);
+      if (addedIdx !== -1) spots.splice(addedIdx, 1);
+      else if (spots.length > 1) spots.pop();
+      msg = 'スポットを1つスキップし、ゆとりを持って18時20分前に名張へ帰宅できるよう調整しました！';
+    } else if (mode === 'extend') {
+      let total = START_MIN + finalDriveMin;
+      spots.forEach(s => { total += s.driveBefore + s.stay; });
+      deadlineMin = total;
+      msg = `帰宅デッドラインを${formatTime(deadlineMin)}に延長しました！全スポットをゆっくり満喫しましょう。`;
+    }
+    document.getElementById('conciergeMsg').innerText = `✅ ${msg}`;
+    speakGuide(msg);
+    renderTimeline();
+  }
+
+  function handleChat() {
+    const input = document.getElementById('chatInput');
+    const val = input.value.trim();
+    if (!val) return;
+    input.value = '';
+
+    if (pendingProposal) {
+      if (val.includes('行かな') || val.includes('パス') || val.includes('スルー') || val.includes('いいえ') || val.includes('次')) {
+        decideNo();
+      } else if (val.includes('行') || val.includes('寄') || val.includes('はい') || val.includes('お願い') || val.includes('追加')) {
+        decideYes();
+      }
+      return;
+    }
+
+    if (currentMode === 'mystery') {
+      triggerMysteryProposal();
+      return;
+    }
+
+    if (val.includes('遅') || val.includes('並')) simulateDelay();
+    else if (val.includes('温泉')) { activeThemes.add('温泉'); simulateHungry(); }
+    else if (val.includes('スイーツ') || val.includes('小腹')) { activeThemes.add('スイーツ'); simulateHungry(); }
+    else {
+      spots.push({
+        id: 'custom_' + Date.now(),
+        name: `✨ ${val}`,
+        driveBefore: 15,
+        stay: 25,
+        badge: '音声追加',
+        guide: `🎙️ 音声リクエスト「${val}」をルートに組み込みました！`,
+        added: true
+      });
+      const msg = `「${val}」をタイムラインに追加しました！帰宅時間への影響をチェックしています。`;
+      document.getElementById('conciergeMsg').innerText = `🎙️ ${msg}`;
+      speakGuide(msg);
+      renderTimeline();
+    }
+  }
+
+  function resetPlan() {
+    deadlineMin = 18 * 60 + 20;
+    spots = JSON.parse(JSON.stringify(initialSpots));
+    const msg = '初期プラン（11時名張発、18時20分名張帰宅厳守）にリセットしました。';
+    document.getElementById('conciergeMsg').innerText = `🔄 ${msg}`;
+    speakGuide(msg);
+    renderTimeline();
+  }
+
+  renderTimeline();
+</script>
+</body>
+</html>
