@@ -1317,19 +1317,25 @@
     else if (val.includes('温泉')) { activeThemes.add('温泉'); simulateHungry(); }
     else if (val.includes('スイーツ') || val.includes('小腹')) { activeThemes.add('スイーツ'); simulateHungry(); }
     else {
-      spots.push({
-        id: 'custom_' + Date.now(),
-        name: `✨ ${val}`,
-        driveBefore: 15,
-        stay: 25,
-        badge: '音声追加',
-        guide: `🎙️ 音声リクエスト「${val}」をルートに組み込みました！`,
-        added: true
+    document.getElementById('conciergeMsg').innerText = '🤖 考え中...';
+
+    fetch('/.netlify/functions/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: val,
+        systemContext: 'あなたは運転中のドライブを安全にサポートする旅行コンシェルジュです。名張市周辺や質問内容に合わせて、実際に存在する具体的な店舗名やスポット名を簡潔に提案してください。架空の店名は作らないでください。'
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const reply = data.text || data.reply || data.message || '回答を取得できませんでした。';
+        document.getElementById('conciergeMsg').innerText = `🤖 ${reply}`;
+        if (typeof speakGuide === 'function') speakGuide(reply);
+      })
+      .catch((err) => {
+        document.getElementById('conciergeMsg').innerText = `⚠️ 通信エラー: ${err.message}`;
       });
-      const msg = `「${val}」をタイムラインに追加しました！帰宅時間への影響をチェックしています。`;
-      document.getElementById('conciergeMsg').innerText = `🎙️ ${msg}`;
-      speakGuide(msg);
-      renderTimeline();
     }
   }
 
