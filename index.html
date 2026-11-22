@@ -1329,7 +1329,7 @@
     })
       .then((res) => res.json())
       .then((data) => {
-        const reply = data.text || data.reply || data.message || '回答を取得できませんでした。';
+       const reply = data.text || data.reply || data.message || JSON.stringify(data);
         document.getElementById('conciergeMsg').innerText = `🤖 ${reply}`;
         if (typeof speakGuide === 'function') speakGuide(reply);
       })
